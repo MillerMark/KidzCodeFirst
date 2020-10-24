@@ -1,0 +1,60 @@
+Unity.2D.Sprite.Editor.csproj
+Unity.2D.Tilemap.Editor.csproj
+Unity.Analytics.DataPrivacy.csproj
+Unity.Analytics.DataPrivacy.Player.csproj
+Unity.CollabProxy.Editor.csproj
+Unity.Rider.Editor.csproj
+Unity.TextMeshPro.csproj
+Unity.TextMeshPro.Editor.csproj
+Unity.TextMeshPro.Player.csproj
+Unity.Timeline.csproj
+Unity.Timeline.Editor.csproj
+Unity.Timeline.Player.csproj
+Unity.VisualStudio.Editor.csproj
+Unity.VSCode.Editor.csproj
+UnityEditor.Purchasing.csproj
+UnityEditor.SpatialTracking.csproj
+UnityEditor.TestRunner.csproj
+UnityEditor.UI.csproj
+UnityEditor.XR.LegacyInputHelpers.csproj
+UnityEngine.Advertisements.csproj
+UnityEngine.Advertisements.Player.csproj
+UnityEngine.Monetization.csproj
+UnityEngine.Monetization.Player.csproj
+UnityEngine.Purchasing.csproj
+UnityEngine.Purchasing.Player.csproj
+UnityEngine.SpatialTracking.csproj
+UnityEngine.SpatialTracking.Player.csproj
+UnityEngine.TestRunner.csproj
+UnityEngine.TestRunner.Player.csproj
+UnityEngine.UI.csproj
+UnityEngine.UI.Player.csproj
+UnityEngine.XR.LegacyInputHelpers.csproj
+UnityEngine.XR.LegacyInputHelpers.Player.csproj
+Assembly-CSharp (DESKTOP-P6M3R82's conflicted copy 2020-10-12).csproj
+debug.log
+*.suo
+*.mp4
+Library/AssetImportState (DESKTOP-P6M3R82's conflicted copy 2020-10-12)
+Library/BuildSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+Library/EditorUserBuildSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+Library/EditorUserSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+Library/InspectorExpandedItems (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+Library/MonoManager (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+Library/ScriptMapper (DESKTOP-P6M3R82's conflicted copy 2020-10-12)
+Library/shadercompiler-UnityShaderCompiler.exe0 (DESKTOP-P6M3R82's conflicted copy 2020-10-12).log
+Library/
+obj/
+Packages/
+ProjectSettings/AudioManager (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/DynamicsManager (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/EditorSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/GraphicsSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/Physics2DSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/PresetManager (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/ProjectSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/ProjectVersion (DESKTOP-P6M3R82's conflicted copy 2020-10-12).txt
+ProjectSettings/QualitySettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+ProjectSettings/UnityConnectSettings (DESKTOP-P6M3R82's conflicted copy 2020-10-12).asset
+Temp/
+*.log
