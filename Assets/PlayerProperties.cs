@@ -18,9 +18,9 @@ public class PlayerProperties : MonoBehaviour
 	// Variables are like a box or a container. They hold whatever you put within them.
 	// They can have really cool names. Like this one:
 	bool canJump;
-	bool canTurnLeft;
+	bool canMoveLeft;
 	bool canFireMissile;
-	bool canTurnRight;
+	bool canMoveRight;
 	// Variables can also be of different types. The variable above is a bool, which means true or false.
 
 	public float SidewaysTorque = 50;
@@ -40,9 +40,9 @@ public class PlayerProperties : MonoBehaviour
 			}
 		}
 
-		if (Input.GetKeyDown(KeyCode.LeftArrow))
+		if (Input.GetKey(KeyCode.LeftArrow))
 		{
-			canTurnLeft = true;
+			canMoveLeft = true;
 		}
 
 		if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl))
@@ -50,9 +50,9 @@ public class PlayerProperties : MonoBehaviour
 			canFireMissile = true;
 		}
 
-		if (Input.GetKeyDown(KeyCode.RightArrow))
+		if (Input.GetKey(KeyCode.RightArrow))
 		{
-			canTurnRight = true;
+			canMoveRight = true;
 		}
 	}
 
@@ -68,18 +68,18 @@ public class PlayerProperties : MonoBehaviour
 			canJump = false;
 		}
 
-		if (canTurnLeft)
+		if (canMoveLeft)
 		{
 			//Player.AddTorque(new Vector3(0, SidewaysTorque, 0));
 			Player.AddForce(transform.right * SidewaysForce);
-			canTurnLeft = false;
+			canMoveLeft = false;
 		}
 
-		if (canTurnRight)
+		if (canMoveRight)
 		{
 			//Player.AddTorque(new Vector3(0, -SidewaysTorque, 0));
 			Player.AddForce(transform.right * -SidewaysForce);
-			canTurnRight = false;
+			canMoveRight = false;
 		}
 
 		if (canFireMissile)

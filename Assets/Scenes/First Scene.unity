@@ -249,6 +249,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Camera: {fileID: 963194228}
+  BlackHole: {fileID: 1982490471}
+  LifeSpanSeconds: 3
 --- !u!1 &119736164
 GameObject:
   m_ObjectHideFlags: 0
@@ -279,6 +281,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayerPosition: {fileID: 1090628101}
+  Track: {fileID: 695950222}
+  LeftWall: {fileID: 1693811192}
+  RightWall: {fileID: 166263565}
+  TrackLength: 250
   DistanceBetweenDrops: 40
   DistanceAheadToDrop: 40
   Prototype: {fileID: 3631103}
