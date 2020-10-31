@@ -284,10 +284,11 @@ MonoBehaviour:
   Track: {fileID: 695950222}
   LeftWall: {fileID: 1693811192}
   RightWall: {fileID: 166263565}
-  TrackLength: 250
+  TrackLength: 100
   DistanceBetweenDrops: 40
   DistanceAheadToDrop: 40
   Prototype: {fileID: 3631103}
+  Camera: {fileID: 0}
 --- !u!4 &119736166
 Transform:
   m_ObjectHideFlags: 0
@@ -444,6 +445,36 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!1 &296822356
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 296822357}
+  m_Layer: 0
+  m_Name: ObstacleParent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &296822357
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 296822356}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.0648421, y: -45.64563, z: -4.6705084}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &656337915
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,7 +19,7 @@ public class ObstacleLogic : MonoBehaviour
 	void FixedUpdate()
 	{
 		if (transform.position.z < Camera.position.z && transform.position.y > 0)
-			Destroy(this.gameObject);
+			Destroy(gameObject);
 
 		float deathTime = creationTime + LifeSpanSeconds;
 		if (Time.time > deathTime && live && !isFloating)
