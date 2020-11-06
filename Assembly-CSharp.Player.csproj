@@ -55,12 +55,13 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\MissileBehavior.cs" />
+    <Compile Include="Assets\FloatingBehavior.cs" />
     <Compile Include="Assets\ObstacleLogic.cs" />
     <Compile Include="Assets\GameLogic.cs" />
     <Compile Include="Assets\PlayerProperties.cs" />
     <Compile Include="Assets\CameraFollow.cs" />
-    <Compile Include="Assets\MissileBehavior.cs" />
-    <Compile Include="Assets\FloatingBehavior.cs" />
+    <Compile Include="Assets\PowerUpBehavior.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

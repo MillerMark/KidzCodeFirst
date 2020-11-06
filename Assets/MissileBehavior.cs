@@ -6,9 +6,12 @@ using UnityEngine;
 public class MissileBehavior : MonoBehaviour
 {
 	public Transform BlackHole;
-	public float MissileLifeSpan = 3;
-	public bool flying = false;
+	public float MissileLifeSpanSeconds = 3f;
 	float creationTime;
+	internal bool flying;
+	public int numBlocksToPowerUp = 1;
+	static int numBlocksDestroyed;
+	public GameObject PowerUp;
 
 	// Start is called before the first frame update
 	void Start()
@@ -16,16 +19,18 @@ public class MissileBehavior : MonoBehaviour
 		creationTime = Time.time;
 	}
 
-	// Update is called once per frame
-	void FixedUpdate()
+	bool LifeHasExpired()
 	{
-		if (flying && LifeSpanIsOver())
-			Destroy(gameObject);
+		return Time.time - creationTime > MissileLifeSpanSeconds;
 	}
 
-	private bool LifeSpanIsOver()
+	void FixedUpdate()
 	{
-		return Time.time - creationTime > MissileLifeSpan;
+		if (LifeHasExpired() && flying)
+		{
+			//Debug.Log($"Destroying the missile which was created at {creationTime} (current time is {Time.time}).");
+			Destroy(gameObject);
+		}
 	}
 
 	void BlowUpBlock(GameObject gameObject)
@@ -44,6 +49,21 @@ public class MissileBehavior : MonoBehaviour
 		}
 
 		Destroy(gameObject);
+
+		numBlocksDestroyed++;
+
+		if (numBlocksDestroyed >= numBlocksToPowerUp)
+		{
+			const float dropAheadPosition = 19f;
+			const float dropAheadHeight = 10f;
+			Vector3 powerUpPosition = new Vector3(transform.position.x, transform.position.y + dropAheadHeight, transform.position.z + dropAheadPosition);
+			GameObject powerUp = Instantiate(PowerUp, powerUpPosition, Quaternion.identity);
+			Rigidbody rigidbody = powerUp.GetComponent<Rigidbody>();
+			rigidbody.useGravity = true;
+			numBlocksDestroyed = 0;
+
+			Debug.Log("Power Up Created");
+		}
 	}
 
 	private void CreateParticle(GameObject gameObject, Vector3 scaleVector, Vector3 positionVector)

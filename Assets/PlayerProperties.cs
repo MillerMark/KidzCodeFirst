@@ -4,27 +4,27 @@ using UnityEngine;
 
 public class PlayerProperties : MonoBehaviour
 {
+	bool scaledUp;
 	public Rigidbody Player;
 	public GameObject MissilePrototype;
-
-	Vector3 lastPosition;
 	// Start is called before the first frame update
 	void Start()
 	{
-		
+
 	}
 
 	// ![](8AE0076460CA94E7503B247B8104AE13.png)
 	// Variables are like a box or a container. They hold whatever you put within them.
 	// They can have really cool names. Like this one:
 	bool canJump;
-	bool canMoveLeft;
+	bool canTurnLeft;
 	bool canFireMissile;
-	bool canMoveRight;
+	bool canTurnRight;
+	Vector3 lastPosition;
 	// Variables can also be of different types. The variable above is a bool, which means true or false.
 
 	public float SidewaysTorque = 50;
-	public float SidewaysForce = 10;
+	public float SidewaysForce = 5;
 	float lastJumpTimeSec = -2;
 
 	// For screen rendering updates. About 30/s
@@ -42,7 +42,7 @@ public class PlayerProperties : MonoBehaviour
 
 		if (Input.GetKey(KeyCode.LeftArrow))
 		{
-			canMoveLeft = true;
+			canTurnLeft = true;
 		}
 
 		if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl))
@@ -52,7 +52,7 @@ public class PlayerProperties : MonoBehaviour
 
 		if (Input.GetKey(KeyCode.RightArrow))
 		{
-			canMoveRight = true;
+			canTurnRight = true;
 		}
 	}
 
@@ -61,25 +61,25 @@ public class PlayerProperties : MonoBehaviour
 	void FixedUpdate()
 	{
 		// new Vector3(0, 0, 10)
-		Player.AddForce(transform.forward * 5);
+		Player.AddForce(transform.forward * 2);
 		if (canJump)
 		{
 			Player.AddForce(transform.up * 500);
 			canJump = false;
 		}
 
-		if (canMoveLeft)
+		if (canTurnLeft)
 		{
 			//Player.AddTorque(new Vector3(0, SidewaysTorque, 0));
 			Player.AddForce(transform.right * SidewaysForce);
-			canMoveLeft = false;
+			canTurnLeft = false;
 		}
 
-		if (canMoveRight)
+		if (canTurnRight)
 		{
 			//Player.AddTorque(new Vector3(0, -SidewaysTorque, 0));
 			Player.AddForce(transform.right * -SidewaysForce);
-			canMoveRight = false;
+			canTurnRight = false;
 		}
 
 		if (canFireMissile)
@@ -87,13 +87,22 @@ public class PlayerProperties : MonoBehaviour
 			canFireMissile = false;
 			Vector3 position = new Vector3(transform.position.x, transform.position.y, transform.position.z + 2);
 			GameObject missile = Instantiate(MissilePrototype, position, new Quaternion(0, 90, 90, 0));
-			const float missileSpeed = 2500f;
+			const float missileSpeed = 750f;
 			float playerSpeed = (transform.position - lastPosition).magnitude;
 			//Debug.Log(playerSpeed);
-			missile.GetComponent<Rigidbody>().AddForce(transform.forward * (missileSpeed + playerSpeed * 2000));
+			missile.GetComponent<Rigidbody>().AddForce(transform.forward * (missileSpeed + playerSpeed * 700));
 			missile.GetComponent<MissileBehavior>().flying = true;
+			lastPosition = transform.position;
 		}
-		// 
-		lastPosition = transform.position;
+	}
+
+	public void PowerUp()
+	{
+		if (scaledUp)
+			return;
+		scaledUp = true;
+		const float multiplier = 2f;
+		transform.localScale = new Vector3(transform.localScale.x * multiplier, transform.localScale.y * multiplier, transform.localScale.z * multiplier);
+		transform.position = new Vector3(transform.position.x, transform.position.y + transform.localScale.y * multiplier / 2, transform.position.z);
 	}
 }
