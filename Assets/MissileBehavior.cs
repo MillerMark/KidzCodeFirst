@@ -61,8 +61,6 @@ public class MissileBehavior : MonoBehaviour
 			Rigidbody rigidbody = powerUp.GetComponent<Rigidbody>();
 			rigidbody.useGravity = true;
 			numBlocksDestroyed = 0;
-
-			Debug.Log("Power Up Created");
 		}
 	}
 

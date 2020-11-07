@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerProperties : MonoBehaviour
 {
+	public bool FirstClass { get; set; }
 	bool scaledUp;
 	public Rigidbody Player;
 	public GameObject MissilePrototype;

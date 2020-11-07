@@ -45,8 +45,7 @@ public class GameLogic : MonoBehaviour
 		{
 			SetupNewTrack(-3, endOfTrackZ + 5);
 			CameraFollow cameraFollow = Camera.GetComponent<CameraFollow>();
-			// TODO: Pretty sure the track transition jump is caused by this sudden change to CameraY:
-			cameraFollow.CameraY = cameraFollow.CameraY - 3;
+			cameraFollow.CameraY.Shift(-3);
 		}
 		float deltaZ = PlayerPosition.position.z - LastDropPositionZ;
 		if (deltaZ > DistanceBetweenDrops)

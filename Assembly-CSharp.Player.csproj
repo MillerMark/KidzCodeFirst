@@ -58,10 +58,12 @@
     <Compile Include="Assets\MissileBehavior.cs" />
     <Compile Include="Assets\FloatingBehavior.cs" />
     <Compile Include="Assets\ObstacleLogic.cs" />
+    <Compile Include="Assets\PowerUpBehavior.cs" />
     <Compile Include="Assets\GameLogic.cs" />
     <Compile Include="Assets\PlayerProperties.cs" />
     <Compile Include="Assets\CameraFollow.cs" />
-    <Compile Include="Assets\PowerUpBehavior.cs" />
+    <Compile Include="Assets\DeleteBehindCamera.cs" />
+    <Compile Include="Assets\SmoothMover.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
