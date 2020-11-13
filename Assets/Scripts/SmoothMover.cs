@@ -12,16 +12,35 @@ public class SmoothMover
 	// constructor...
 	public SmoothMover()
 	{
-
+		Start();
 	}
 
+
 	// constructor...
-	public SmoothMover(int durationSeconds, int startValue, int endValue)
+	public SmoothMover(float durationSeconds, float startValue, float endValue) : this()
 	{
 		DurationSeconds = durationSeconds;
 		StartValue = startValue;
 		EndValue = endValue;
 	}
+
+	public float EndTime
+	{
+		get
+		{
+			return StartTime + DurationSeconds;
+		}
+	}
+
+
+	public bool HasEnded
+	{
+		get
+		{
+			return Time.time > EndTime;
+		}
+	}
+
 
 	public void Start()
 	{
@@ -58,8 +77,7 @@ public class SmoothMover
 		if (weHaveNotStartedYet)
 			return 0;
 
-		float endTime = StartTime + DurationSeconds;
-		bool alreadyFinished = currentTime >= endTime;
+		bool alreadyFinished = currentTime >= EndTime;
 		if (alreadyFinished)
 			return 1;
 
@@ -89,3 +107,4 @@ public class SmoothMover
 		Start();
 	}
 }
+

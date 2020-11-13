@@ -31,6 +31,9 @@ public class ObstacleLogic : MonoBehaviour
 
 	public static void BlowUpBlock(GameObject gameObject, Transform blackHole)
 	{
+		if (gameObject.transform.localScale.x < 1)
+			return;
+
 		const int numBlocksPerSide = 2;
 		const float scale = 1f / numBlocksPerSide;
 		Vector3 blockPosition = gameObject.transform.position;

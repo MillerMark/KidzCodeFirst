@@ -2,12 +2,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class PlayerProperties : MonoBehaviour
 {
-	public bool FirstClass { get; set; }
 	bool scaledUp;
+
 	public Rigidbody Player;
+
 	public GameObject MissilePrototype;
+
+	public Transform BlackHole;
+	public Transform Track;
+
+	SmoothMover scaleAnimation;
 	// Start is called before the first frame update
 	void Start()
 	{
@@ -26,6 +33,11 @@ public class PlayerProperties : MonoBehaviour
 
 	public float SidewaysTorque = 50;
 	public float SidewaysForce = 5;
+	float powerUpForceMultiplier = 1;
+	float powerUpScaleMultiplier = 1;
+	public float ForwardForce = 2;
+	public float PowerUpDuration = 3;
+	float powerUpEndTime;
 	float lastJumpTimeSec = -2;
 
 	// For screen rendering updates. About 30/s
@@ -34,7 +46,7 @@ public class PlayerProperties : MonoBehaviour
 	{
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			if (transform.position.y < 3.1 && Time.time - lastJumpTimeSec > 0.2)
+			if (IsNearGround() && Time.time - lastJumpTimeSec > 0.2)
 			{
 				lastJumpTimeSec = Time.time;
 				canJump = true;
@@ -57,29 +69,36 @@ public class PlayerProperties : MonoBehaviour
 		}
 	}
 
+	private bool IsNearGround()
+	{
+		return transform.position.y <= Track.position.y + 0.5 + powerUpScaleMultiplier * 2.5;
+	}
+
+	float yPositionBeforeScaleAnimation;
+
 	// For physics engine updates. About 100/s
 	// Apply forces here.
 	void FixedUpdate()
 	{
 		// new Vector3(0, 0, 10)
-		Player.AddForce(transform.forward * 2);
+		Player.AddForce(transform.forward * ForwardForce * powerUpForceMultiplier);
 		if (canJump)
 		{
-			Player.AddForce(transform.up * 500);
+			Player.AddForce(transform.up * 500 * powerUpForceMultiplier);
 			canJump = false;
 		}
 
 		if (canTurnLeft)
 		{
 			//Player.AddTorque(new Vector3(0, SidewaysTorque, 0));
-			Player.AddForce(transform.right * SidewaysForce);
+			Player.AddForce(transform.right * SidewaysForce * powerUpForceMultiplier);
 			canTurnLeft = false;
 		}
 
 		if (canTurnRight)
 		{
 			//Player.AddTorque(new Vector3(0, -SidewaysTorque, 0));
-			Player.AddForce(transform.right * -SidewaysForce);
+			Player.AddForce(transform.right * -SidewaysForce * powerUpForceMultiplier);
 			canTurnRight = false;
 		}
 
@@ -95,6 +114,31 @@ public class PlayerProperties : MonoBehaviour
 			missile.GetComponent<MissileBehavior>().flying = true;
 			lastPosition = transform.position;
 		}
+
+		if (scaledUp && Time.time > powerUpEndTime)
+			PowerDown();
+
+		if (scaleAnimation != null)
+		{
+			ScaleTo(scaleAnimation.Value, yPositionBeforeScaleAnimation);
+			if (scaleAnimation.HasEnded)
+				scaleAnimation = null;
+		}
+	}
+
+	private void PowerDown()
+	{
+		powerUpForceMultiplier = 1;
+		GetComponent<Rigidbody>().mass = 1;
+		AnimateScaleTo(1);
+		scaledUp = false;
+	}
+
+	private void AnimateScaleTo(float newScaleMultiplier)
+	{
+		powerUpScaleMultiplier = newScaleMultiplier;
+		scaleAnimation = new SmoothMover(0.5f, transform.localScale.x, powerUpScaleMultiplier);
+		yPositionBeforeScaleAnimation = transform.position.y;
 	}
 
 	public void PowerUp()
@@ -102,8 +146,27 @@ public class PlayerProperties : MonoBehaviour
 		if (scaledUp)
 			return;
 		scaledUp = true;
-		const float multiplier = 2f;
-		transform.localScale = new Vector3(transform.localScale.x * multiplier, transform.localScale.y * multiplier, transform.localScale.z * multiplier);
-		transform.position = new Vector3(transform.position.x, transform.position.y + transform.localScale.y * multiplier / 2, transform.position.z);
+		AnimateScaleTo(2f);
+		powerUpForceMultiplier = 100;
+		GetComponent<Rigidbody>().mass = powerUpForceMultiplier;
+		powerUpEndTime = Time.time + PowerUpDuration;
+	}
+
+	private void ScaleTo(float newScale, float savedY)
+	{
+		transform.localScale = new Vector3(newScale, newScale, newScale);
+		transform.position = new Vector3(transform.position.x, savedY + newScale / 2, transform.position.z);
+	}
+
+	void OnCollisionEnter(Collision collision)
+	{
+		if (!scaledUp)
+			return;
+		if (!collision.gameObject.name.Contains("PrototypeBlock"))
+		{
+			//Debug.Log("Only blowing up blocks!!!");
+			return;
+		}
+		ObstacleLogic.BlowUpBlock(collision.gameObject, BlackHole);
 	}
 }

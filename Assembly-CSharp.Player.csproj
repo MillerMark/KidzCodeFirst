@@ -55,15 +55,15 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\MissileBehavior.cs" />
-    <Compile Include="Assets\FloatingBehavior.cs" />
-    <Compile Include="Assets\ObstacleLogic.cs" />
-    <Compile Include="Assets\PowerUpBehavior.cs" />
-    <Compile Include="Assets\GameLogic.cs" />
-    <Compile Include="Assets\PlayerProperties.cs" />
-    <Compile Include="Assets\CameraFollow.cs" />
-    <Compile Include="Assets\DeleteBehindCamera.cs" />
-    <Compile Include="Assets\SmoothMover.cs" />
+    <Compile Include="Assets\Scripts\MissileBehavior.cs" />
+    <Compile Include="Assets\Scripts\FloatingBehavior.cs" />
+    <Compile Include="Assets\Scripts\ObstacleLogic.cs" />
+    <Compile Include="Assets\Scripts\PowerUpBehavior.cs" />
+    <Compile Include="Assets\Scripts\GameLogic.cs" />
+    <Compile Include="Assets\Scripts\DeleteBehindCamera.cs" />
+    <Compile Include="Assets\Scripts\PlayerProperties.cs" />
+    <Compile Include="Assets\Scripts\CameraFollow.cs" />
+    <Compile Include="Assets\Scripts\SmoothMover.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

@@ -22,7 +22,7 @@ public class PowerUpBehavior : MonoBehaviour
 			GameObject player = someObject.transform.gameObject;
 			PlayerProperties playerProperties = player.GetComponent<PlayerProperties>();
 			playerProperties.PowerUp();
-			// destroy object
+			Destroy(gameObject);
 		}
 	}
 
