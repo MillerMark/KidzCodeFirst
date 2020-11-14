@@ -167,6 +167,6 @@ public class PlayerProperties : MonoBehaviour
 			//Debug.Log("Only blowing up blocks!!!");
 			return;
 		}
-		ObstacleLogic.BlowUpBlock(collision.gameObject, BlackHole);
+		GameLogic.BlowUpBlock(collision.gameObject, BlackHole);
 	}
 }

@@ -5,13 +5,10 @@ using UnityEngine;
 
 public class MissileBehavior : MonoBehaviour
 {
-	public Transform BlackHole;
 	public float MissileLifeSpanSeconds = 3f;
 	float creationTime;
 	internal bool flying;
-	public int numBlocksToPowerUp = 1;
-	static int numBlocksDestroyed;
-	public GameObject PowerUp;
+	public GameObject GameLogic;
 
 	// Start is called before the first frame update
 	void Start()
@@ -40,24 +37,9 @@ public class MissileBehavior : MonoBehaviour
 			//Debug.Log("Only blowing up blocks!!!");
 			return;
 		}
-		ObstacleLogic.BlowUpBlock(collision.gameObject, BlackHole);
-		numBlocksDestroyed++;
-
-		CheckForPowerUp();
+		
+		GameLogic gameLogic = GameLogic.GetComponent<GameLogic>();
+		gameLogic.MissileHitsBlock(collision.gameObject);
 		Destroy(gameObject);
-	}
-
-	private void CheckForPowerUp()
-	{
-		if (numBlocksDestroyed >= numBlocksToPowerUp)
-		{
-			const float dropAheadPosition = 19f;
-			const float dropAheadHeight = 10f;
-			Vector3 powerUpPosition = new Vector3(transform.position.x, transform.position.y + dropAheadHeight, transform.position.z + dropAheadPosition);
-			GameObject powerUp = Instantiate(PowerUp, powerUpPosition, Quaternion.identity);
-			Rigidbody rigidbody = powerUp.GetComponent<Rigidbody>();
-			rigidbody.useGravity = true;
-			numBlocksDestroyed = 0;
-		}
 	}
 }
