@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\PlayerProperties.cs" />
     <Compile Include="Assets\Scripts\CameraFollow.cs" />
     <Compile Include="Assets\Scripts\SmoothMover.cs" />
+    <Compile Include="Assets\Game\Skeleton Prefab\SkeletonController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

@@ -71,6 +71,8 @@ public class PlayerProperties : MonoBehaviour
 
 	private bool IsNearGround()
 	{
+		if (!gameObject.activeInHierarchy)
+			return false;
 		return transform.position.y <= Track.position.y + 0.5 + powerUpScaleMultiplier * 2.5;
 	}
 

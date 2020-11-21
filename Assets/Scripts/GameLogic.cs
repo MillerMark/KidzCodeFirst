@@ -2,15 +2,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameLogic : MonoBehaviour
 {
-	public Transform PlayerPosition;
-	public Transform Track;
+	private const float distanceToDropBetweenLevels = -3f;
+	private const float distanceBetweenTracks = 5f;
+	SmoothMover trackOpacity;
+	public GameObject Player;
 	public GameObject Floor;
-	public Transform LeftWall;
-	public Transform RightWall;
+	public GameObject LeftWall;
+	public GameObject RightWall;
+	GameObject nextFloor;
+	GameObject nextLeftWall;
+	GameObject nextRightWall;
 
 	public float TrackLength = 500;
 	public float TrackIncreasePerLevel = 100;
@@ -21,16 +27,18 @@ public class GameLogic : MonoBehaviour
 	int ObstacleCount = 0;
 	public float DistanceBetweenDrops = 10;
 	public float DistanceAheadToDrop = 20;
-	public float SecondsPerLap = 7;
-	public GameObject Prototype;
+	public float SecondsPerLap = 12;
+	public GameObject Obstacle;
 	public GameObject Camera;
 	public Text LevelText;
 	public Text CountdownText;
 	public Transform BlackHole;
+	public Transform Skeleton;
 	public GameObject PowerUp;
 	public int NumBlocksToPowerUp = 4;
 	float endOfTrackZ;
-	float trackCount;
+	float endOfNextTrackZ;
+	int levelCount;
 	float lapStartTime = -1;
 	float endTime;
 	static int numBlocksDestroyed;
@@ -38,15 +46,41 @@ public class GameLogic : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
-		SetupNewTrack();
+		SetupInitialTrack();
+		CreateNextTrack(distanceToDropBetweenLevels, endOfTrackZ + distanceBetweenTracks);
+		StartNewLevel();
 	}
 
-	void SetupNewTrack(float yOffset = 0, float zOffset = 0)
+	private void SetupInitialTrack()
 	{
-		SetTrackLength(Track, yOffset, zOffset);
-		SetTrackLength(LeftWall, yOffset, zOffset);
-		SetTrackLength(RightWall, yOffset, zOffset);
-		trackCount++;
+		SetTrackLengthAndPosition(Floor);
+		SetTrackLengthAndPosition(LeftWall);
+		SetTrackLengthAndPosition(RightWall);
+		endOfTrackZ = TrackLength;
+		Skeleton.position = new Vector3(0, Floor.transform.position.y + 0.5f, Floor.transform.position.z + Floor.transform.localScale.z / 2);
+	}
+
+	void CreateNextTrack(float yOffset = 0, float zOffset = 0)
+	{
+		nextFloor = Instantiate(Floor);
+		nextLeftWall = Instantiate(LeftWall);
+		nextRightWall = Instantiate(RightWall);
+
+		Skeleton.position = new Vector3(0, Floor.transform.position.y + 0.5f, Floor.transform.position.z + Floor.transform.localScale.z / 2);
+		SkeletonController controller = Skeleton.GetComponent<SkeletonController>();
+		controller.Attack();
+
+		SetTrackLengthAndPosition(nextFloor, yOffset, zOffset);
+		SetTrackLengthAndPosition(nextLeftWall, yOffset, zOffset);
+		SetTrackLengthAndPosition(nextRightWall, yOffset, zOffset);
+		endOfNextTrackZ = zOffset + TrackLength;
+	}
+
+	private void StartNewLevel()
+	{
+		levelCount++;
+		StackHeight = levelCount;
+		StackWidth = 1;
 		ShowTrackLevel();
 		float lapTime = Time.time - lapStartTime;
 		float extraTime = 0;
@@ -60,28 +94,37 @@ public class GameLogic : MonoBehaviour
 		lapStartTime = Time.time;
 		// TODO: Show extra bonus time in some way!
 		endTime = lapStartTime + SecondsPerLap + extraTime;
-		TrackLength = TrackLength + TrackIncreasePerLevel;
+
+		trackOpacity = new SmoothMover(SecondsPerLap * 0.75f, 1, 0.1f);
+		trackOpacity.StartTime = endTime - trackOpacity.DurationSeconds;
+
+		TrackLength += TrackIncreasePerLevel;
 	}
 
 	void ShowTrackLevel()
 	{
 		//$"" Means that you can mix {data} with text
-		LevelText.text = $"Level {trackCount}";
+		LevelText.text = $"Level {levelCount}";
 	}
 	void ShowTrackCountdown()
 	{
 		float timeRemaining = GetTimeRemaining();
 		if (timeRemaining < 0)
-			CountdownText.text = "Game Over!😭😭😭";
+			ShowGameOver();
 		else
 			CountdownText.text = $"{timeRemaining:F1}s";
 	}
 
-	private void SetTrackLength(Transform transform, float yOffset, float zOffset)
+	private void ShowGameOver()
 	{
+		CountdownText.text = "Game Over!";
+	}
+
+	private void SetTrackLengthAndPosition(GameObject gameObject, float yOffset = 0, float zOffset = 0)
+	{
+		Transform transform = gameObject.transform;
 		transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y, TrackLength);
 		transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y + yOffset, TrackLength / 2 + zOffset);
-		endOfTrackZ = zOffset + TrackLength;
 	}
 
 
@@ -89,7 +132,10 @@ public class GameLogic : MonoBehaviour
 	void GameOver()
 	{
 		Destroy(Floor);
+		Floor = null;
 		gameIsOver = true;
+		ShowGameOver();
+		//SceneManager.LoadScene("Game Over");
 	}
 
 	void FixedUpdate()
@@ -97,23 +143,36 @@ public class GameLogic : MonoBehaviour
 		if (gameIsOver)
 			return;
 
-		if (PlayerPosition.position.z >= endOfTrackZ)
+		if (PlayerFinishedLevel())
 		{
-			SetupNewTrack(-3, endOfTrackZ + 5);
+			NextLevel();
 			CameraFollow cameraFollow = Camera.GetComponent<CameraFollow>();
-			cameraFollow.CameraY.Shift(-3);
+			cameraFollow.CameraY.Shift(distanceToDropBetweenLevels);
 		}
 		else
 		{
-			float timeRemaining = GetTimeRemaining();
-			if (timeRemaining < 0)
+			if (Floor != null && Player.transform.position.y < Floor.transform.position.y)
+			{
 				GameOver();
+				return;
+			}
+
+			float timeRemaining = GetTimeRemaining();
+
+			if (timeRemaining < 0)
+			{
+				GameOver();
+				return;
+			}
 		}
 
-		float deltaZ = PlayerPosition.position.z - LastDropPositionZ;
-		if (deltaZ > DistanceBetweenDrops)
+		// Refactoring...
+
+		float playerZ = Player.transform.position.z;
+		float deltaZ = playerZ - LastDropPositionZ;
+		if (deltaZ > DistanceBetweenDrops && playerZ + DistanceAheadToDrop < endOfTrackZ)
 		{
-			LastDropPositionZ = PlayerPosition.position.z;
+			LastDropPositionZ = playerZ;
 
 			for (int xOffset = 0; xOffset < StackWidth; xOffset++)
 				for (int yOffset = 0; yOffset < StackHeight; yOffset++)
@@ -131,6 +190,28 @@ public class GameLogic : MonoBehaviour
 		}
 	}
 
+	private void NextLevel()
+	{
+		TransferVariables();
+		CreateNextTrack(distanceToDropBetweenLevels, endOfTrackZ + distanceBetweenTracks);
+		StartNewLevel();
+	}
+
+	private void TransferVariables()
+	{
+		endOfTrackZ = endOfNextTrackZ;
+		Floor = nextFloor;
+		LeftWall = nextLeftWall;
+		RightWall = nextRightWall;
+		PlayerProperties playerProperties = Player.GetComponent<PlayerProperties>();
+		playerProperties.Track = Floor.GetComponent<Transform>();
+	}
+
+	private bool PlayerFinishedLevel()
+	{
+		return Player.transform.position.z >= endOfTrackZ;
+	}
+
 	private float GetTimeRemaining()
 	{
 		return endTime - Time.time;
@@ -138,13 +219,27 @@ public class GameLogic : MonoBehaviour
 
 	void Update()
 	{
+		if (gameIsOver)
+			return;
 		ShowTrackCountdown();
+		if (trackOpacity != null)
+			SetTrackOpacity(trackOpacity.Value);
+	}
+
+	private void SetTrackOpacity(float opacity)
+	{
+		if (Floor == null)
+			return;
+		MeshRenderer meshRenderer = Floor.GetComponent<MeshRenderer>();
+		Color color = meshRenderer.material.color;
+		meshRenderer.material.color = new Color(color.r, color.g, color.b, opacity);
 	}
 
 	private void DropBlock(float xOffset, int yOffset, int zOffset)
 	{
-		Vector3 position = new Vector3(PlayerPosition.position.x + xOffset, PlayerPosition.position.y + 2 + yOffset, PlayerPosition.position.z + zOffset + DistanceAheadToDrop);
-		GameObject obstacle = Instantiate(Prototype, position, Quaternion.identity);
+		Vector3 playerPosition = Player.transform.position;
+		Vector3 position = new Vector3(playerPosition.x + xOffset, playerPosition.y + 2 + yOffset, playerPosition.z + zOffset + DistanceAheadToDrop);
+		GameObject obstacle = Instantiate(Obstacle, position, Quaternion.identity);
 
 		ObstacleLogic obstacleLogic = obstacle.GetComponent<ObstacleLogic>();
 		obstacleLogic.live = true;

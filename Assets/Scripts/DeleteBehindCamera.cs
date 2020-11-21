@@ -21,7 +21,7 @@ public class DeleteBehindCamera : MonoBehaviour
 	void FixedUpdate()
 	{
 		bool onTheTrack = transform.position.z > 0;
-		bool behindCamera = transform.position.z < Camera.position.z;
+		bool behindCamera = transform.position.z + transform.localScale.z / 2f < Camera.position.z;
 
 		if (onTheTrack && behindCamera)
 			Destroy(gameObject);
