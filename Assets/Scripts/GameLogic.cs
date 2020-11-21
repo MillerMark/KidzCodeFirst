@@ -146,8 +146,7 @@ public class GameLogic : MonoBehaviour
 		if (PlayerFinishedLevel())
 		{
 			NextLevel();
-			CameraFollow cameraFollow = Camera.GetComponent<CameraFollow>();
-			cameraFollow.CameraY.Shift(distanceToDropBetweenLevels);
+			MoveCameraDownToNewLevel();
 		}
 		else
 		{
@@ -166,28 +165,54 @@ public class GameLogic : MonoBehaviour
 			}
 		}
 
-		// Refactoring...
+		DropBlocksIfNeeded();
+	}
 
+	private void MoveCameraDownToNewLevel()
+	{
+		CameraFollow cameraFollow = Camera.GetComponent<CameraFollow>();
+		cameraFollow.CameraY.Shift(distanceToDropBetweenLevels);
+	}
+
+	private void DropBlocksIfNeeded()
+	{
 		float playerZ = Player.transform.position.z;
-		float deltaZ = playerZ - LastDropPositionZ;
-		if (deltaZ > DistanceBetweenDrops && playerZ + DistanceAheadToDrop < endOfTrackZ)
-		{
-			LastDropPositionZ = playerZ;
+		float distancePlayerHasMovedSinceLastDrop = playerZ - LastDropPositionZ;
 
-			for (int xOffset = 0; xOffset < StackWidth; xOffset++)
-				for (int yOffset = 0; yOffset < StackHeight; yOffset++)
-					//for (int zOffset = 0; zOffset < StackSize; zOffset++)
-					DropBlock(xOffset - StackWidth / 2.0f + 0.5f, yOffset, 0 /* zOffset */);
+		bool weHaveMovedFarEnoughSinceTheLastDrop = distancePlayerHasMovedSinceLastDrop > DistanceBetweenDrops;
+		bool thereIsRoomToDropBlockOnCurrentTrack = playerZ + DistanceAheadToDrop < endOfTrackZ;
 
+		if (!weHaveMovedFarEnoughSinceTheLastDrop)
+			return;
 
-			if (StackWidth * StackHeight < 24 * 24)
-			{
-				if (StackWidth < StackHeight)
-					StackWidth++;
-				else
-					StackHeight++;
-			}
-		}
+		if (!thereIsRoomToDropBlockOnCurrentTrack)
+			return;
+
+		LastDropPositionZ = playerZ;
+		DropRectangularArrayOfBlocks();
+		MakeArrayBiggerIfNeeded();
+	}
+
+	private void MakeArrayBiggerIfNeeded()
+	{
+		bool tooManyBlocks = StackWidth * StackHeight > 24 * 24;
+		if (!tooManyBlocks)
+			MakeArrayBigger();
+	}
+
+	private void MakeArrayBigger()
+	{
+		if (StackWidth < StackHeight)
+			StackWidth++;
+		else
+			StackHeight++;
+	}
+
+	private void DropRectangularArrayOfBlocks()
+	{
+		for (int xOffset = 0; xOffset < StackWidth; xOffset++)
+			for (int yOffset = 0; yOffset < StackHeight; yOffset++)
+				DropBlock(xOffset - StackWidth / 2.0f + 0.5f, yOffset, 0 /* zOffset */);
 	}
 
 	private void NextLevel()
