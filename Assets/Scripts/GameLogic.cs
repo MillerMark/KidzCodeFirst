@@ -57,7 +57,7 @@ public class GameLogic : MonoBehaviour
 		SetTrackLengthAndPosition(LeftWall);
 		SetTrackLengthAndPosition(RightWall);
 		endOfTrackZ = TrackLength;
-		Skeleton.position = new Vector3(0, Floor.transform.position.y + 0.5f, Floor.transform.position.z + Floor.transform.localScale.z / 2);
+		PlaceSkeletonAtEndOfTrack();
 	}
 
 	void CreateNextTrack(float yOffset = 0, float zOffset = 0)
@@ -65,15 +65,43 @@ public class GameLogic : MonoBehaviour
 		nextFloor = Instantiate(Floor);
 		nextLeftWall = Instantiate(LeftWall);
 		nextRightWall = Instantiate(RightWall);
+		PlaceSkeletonAtEndOfTrack();
+		//SkeletonController controller = Skeleton.GetComponent<SkeletonController>();
+		//controller.Stand();
 
-		Skeleton.position = new Vector3(0, Floor.transform.position.y + 0.5f, Floor.transform.position.z + Floor.transform.localScale.z / 2);
-		SkeletonController controller = Skeleton.GetComponent<SkeletonController>();
-		controller.Attack();
+		//int randomNumber = UnityEngine.Random.Range(0, 4);
+		//switch (randomNumber)
+		//{
+		//	case 0:
+		//		controller.Attack();
+		//		break;
+		//	case 1:
+		//		controller.Stand();
+		//		break;
+		//	case 2:
+		//		controller.Skill();
+		//		break;
+		//	case 3:
+		//		controller.Damage();
+		//		break;
+		//}
 
 		SetTrackLengthAndPosition(nextFloor, yOffset, zOffset);
 		SetTrackLengthAndPosition(nextLeftWall, yOffset, zOffset);
 		SetTrackLengthAndPosition(nextRightWall, yOffset, zOffset);
 		endOfNextTrackZ = zOffset + TrackLength;
+	}
+
+	public static bool IsPlayer(GameObject someObject)
+	{
+		return someObject.tag == "Player";
+	}
+
+
+
+	private void PlaceSkeletonAtEndOfTrack()
+	{
+		Skeleton.position = new Vector3(0, Floor.transform.position.y + 0.5f, Floor.transform.position.z + Floor.transform.localScale.z / 2);
 	}
 
 	private void StartNewLevel()
@@ -86,7 +114,8 @@ public class GameLogic : MonoBehaviour
 		float extraTime = 0;
 		if (lapStartTime >= 0)
 		{
-			extraTime = SecondsPerLap - lapTime;
+			float secToCompleteThisLap = endTime - lapStartTime;
+			extraTime = secToCompleteThisLap - lapTime;
 			Debug.Log($"Lap Time is {lapTime}");
 			Debug.Log($"extraTime {extraTime}");
 		}
@@ -210,10 +239,21 @@ public class GameLogic : MonoBehaviour
 
 	private void DropRectangularArrayOfBlocks()
 	{
-		for (int xOffset = 0; xOffset < StackWidth; xOffset++)
-			for (int yOffset = 0; yOffset < StackHeight; yOffset++)
+		int width = StackWidth;
+		int height = StackHeight;
+
+		if (UnityEngine.Random.value > 0.5)
+		{
+			// Swap the aspect ratio.
+			width = StackHeight;
+			height = StackWidth;
+		}
+
+		for (int xOffset = 0; xOffset < width; xOffset++)
+			for (int yOffset = 0; yOffset < height; yOffset++)
 				DropBlock(xOffset - StackWidth / 2.0f + 0.5f, yOffset, 0 /* zOffset */);
 	}
+
 
 	private void NextLevel()
 	{
@@ -279,16 +319,59 @@ public class GameLogic : MonoBehaviour
 	{
 		numBlocksDestroyed++;
 		CheckForPowerUp(block);
-		BlowUpBlock(block, BlackHole);
+		//BlowUpBlockIntoSmallerPieces(block, BlackHole);
+		BlowUpBlockIntoIndividualParts(block, BlackHole);
 	}
 
-	public static void BlowUpBlock(GameObject gameObject, Transform gravityCenter)
+	public static void BlowUpBlockIntoIndividualParts(GameObject gameObject, Transform gravityCenter)
+	{
+		ObstacleLogic originalObstacleLogic = gameObject.GetComponent<ObstacleLogic>();
+		if (originalObstacleLogic == null)
+		{
+			Debug.LogError("You can only blow up objects that have the ObstacleLogic script attached!");
+			return;
+		}
+		Vector3 blockPosition = gameObject.transform.position;
+		//Vector3 localScale = gameObject.transform.localScale;
+		//Vector3 scaleVector = new Vector3(localScale.x, localScale.y, localScale.z);
+		Vector3 positionVector = new Vector3(blockPosition.x, blockPosition.y, blockPosition.z);
+
+		foreach (Transform child in gameObject.GetComponentsInChildren<Transform>())
+		{
+			if (child.gameObject.tag == gameObject.tag)
+			{
+				Debug.Log("Skipping the parent game object");
+				continue;
+			}
+
+			Debug.Log($"Separating: {child.gameObject.tag}");
+			GameObject part = CreateParticle(child.gameObject, child.gameObject.transform.localScale, positionVector, gravityCenter);
+			Debug.Log("Particle created!");
+			part.AddComponent<Rigidbody>();
+			Rigidbody rigidbody = part.GetComponent<Rigidbody>();
+			if (rigidbody != null)
+			{
+				Debug.Log("Adding rigid body worked!");
+			}
+			else
+			{
+				Debug.Log("Adding rigid body failed!");
+			}
+			ObstacleLogic obstacleLogic = part.AddComponent<ObstacleLogic>();
+			obstacleLogic.BlackHole = originalObstacleLogic.BlackHole;
+			obstacleLogic.LifeSpanSeconds = originalObstacleLogic.LifeSpanSeconds;
+			AddBlackHole(gravityCenter, part);
+		}
+
+		Destroy(gameObject);
+	}
+
+	public static void BlowUpBlockIntoSmallerClones(GameObject gameObject, Transform gravityCenter, int numBlocksPerSide = 2)
 	{
 		if (gameObject.transform.localScale.x < 1)
 			return;
 
-		const int numBlocksPerSide = 2;
-		const float scale = 1f / numBlocksPerSide;
+		float scale = 1f / numBlocksPerSide;
 		Vector3 blockPosition = gameObject.transform.position;
 		float localScale = scale * gameObject.transform.localScale.x;
 		Vector3 scaleVector = new Vector3(localScale, localScale, localScale);
@@ -301,10 +384,16 @@ public class GameLogic : MonoBehaviour
 		Destroy(gameObject);
 	}
 
-	private static void CreateParticle(GameObject gameObject, Vector3 scaleVector, Vector3 positionVector, Transform gravityCenter)
+	private static GameObject CreateParticle(GameObject gameObject, Vector3 scaleVector, Vector3 positionVector, Transform gravityCenter)
 	{
 		GameObject newParticle = Instantiate(gameObject, positionVector, Quaternion.identity);
 		newParticle.transform.localScale = scaleVector;
+		AddBlackHole(gravityCenter, newParticle);
+		return newParticle;
+	}
+
+	private static void AddBlackHole(Transform gravityCenter, GameObject newParticle)
+	{
 		Rigidbody rigidbody = newParticle.GetComponent<Rigidbody>();
 		rigidbody.useGravity = false;
 		FloatingBehavior floatingBehavior = newParticle.AddComponent<FloatingBehavior>();
