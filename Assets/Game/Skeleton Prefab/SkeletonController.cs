@@ -2,6 +2,10 @@
 
 public class SkeletonController : MonoBehaviour
 {
+	void OnTriggerEnter()
+	{
+		Debug.Log("OnTriggerEnter");
+	}
 	// reference to our skeleton anim
 	private Animator anim;
 
@@ -39,6 +43,7 @@ public class SkeletonController : MonoBehaviour
 		// the stateName here has to match the name of the state in the Animator window exactly
 		anim.Play("Stand");
 	}
+
 
 	// public method connected to UI button click event
 	public void Skill()
