@@ -32,11 +32,8 @@ public class MissileBehavior : MonoBehaviour
 
 	void OnCollisionEnter(Collision collision)
 	{
-		if (!collision.gameObject.name.Contains("Cheese Burger"))
-		{
-			//Debug.Log("Only blowing up blocks!!!");
+		if (!ObstacleLogic.IsObstacle(collision.gameObject))
 			return;
-		}
 
 		GameLogic gameLogic = GameLogic.GetComponent<GameLogic>();
 		gameLogic.MissileHitsBlock(collision.gameObject);

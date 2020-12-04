@@ -22,13 +22,15 @@ public class GameLogic : MonoBehaviour
 	public float TrackIncreasePerLevel = 100;
 
 	float LastDropPositionZ = -510;
+	float startOfNextTrackZ;
 	int StackWidth = 1;
 	int StackHeight = 1;
 	int ObstacleCount = 0;
 	public float DistanceBetweenDrops = 10;
+	float nextTrackY;
 	public float DistanceAheadToDrop = 20;
 	public float SecondsPerLap = 12;
-	public GameObject Obstacle;
+	public GameObject Obstacles;
 	public GameObject Camera;
 	public Text LevelText;
 	public Text CountdownText;
@@ -60,7 +62,7 @@ public class GameLogic : MonoBehaviour
 		PlaceSkeletonAtEndOfTrack();
 	}
 
-	void CreateNextTrack(float yOffset = 0, float zOffset = 0)
+	void CreateNextTrack(float verticalDrop = 0, float trackStartZ = 0)
 	{
 		nextFloor = Instantiate(Floor);
 		nextLeftWall = Instantiate(LeftWall);
@@ -86,10 +88,12 @@ public class GameLogic : MonoBehaviour
 		//		break;
 		//}
 		
-		SetTrackLengthAndPosition(nextFloor, yOffset, zOffset);
-		SetTrackLengthAndPosition(nextLeftWall, yOffset, zOffset);
-		SetTrackLengthAndPosition(nextRightWall, yOffset, zOffset);
-		endOfNextTrackZ = zOffset + TrackLength;
+		SetTrackLengthAndPosition(nextFloor, verticalDrop, trackStartZ);
+		SetTrackLengthAndPosition(nextLeftWall, verticalDrop, trackStartZ);
+		SetTrackLengthAndPosition(nextRightWall, verticalDrop, trackStartZ);
+		endOfNextTrackZ = trackStartZ + TrackLength;
+		startOfNextTrackZ = trackStartZ;
+		nextTrackY = nextFloor.transform.position.y;
 	}
 
 	public static bool IsPlayer(GameObject someObject)
@@ -122,12 +126,17 @@ public class GameLogic : MonoBehaviour
 
 		lapStartTime = Time.time;
 		// TODO: Show extra bonus time in some way!
-		endTime = lapStartTime + SecondsPerLap + extraTime;
+		CalculateTrackTimeout(extraTime);
+
+		TrackLength += TrackIncreasePerLevel;
+	}
+
+	private void CalculateTrackTimeout(float extraTime)
+	{
+		endTime = lapStartTime + SecondsPerLap + Math.Max(0, extraTime);
 
 		trackOpacity = new SmoothMover(SecondsPerLap * 0.75f, 1, 0.1f);
 		trackOpacity.StartTime = endTime - trackOpacity.DurationSeconds;
-
-		TrackLength += TrackIncreasePerLevel;
 	}
 
 	void ShowTrackLevel()
@@ -139,7 +148,7 @@ public class GameLogic : MonoBehaviour
 	{
 		float timeRemaining = GetTimeRemaining();
 		if (timeRemaining < 0)
-			ShowGameOver();
+			CountdownText.text = "0!!!!";
 		else
 			CountdownText.text = $"{timeRemaining:F1}s";
 	}
@@ -149,11 +158,11 @@ public class GameLogic : MonoBehaviour
 		CountdownText.text = "Game Over!";
 	}
 
-	private void SetTrackLengthAndPosition(GameObject gameObject, float yOffset = 0, float zOffset = 0)
+	private void SetTrackLengthAndPosition(GameObject gameObject, float verticalDrop = 0, float zOffset = 0)
 	{
 		Transform transform = gameObject.transform;
 		transform.localScale = new Vector3(transform.localScale.x, transform.localScale.y, TrackLength);
-		transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y + yOffset, TrackLength / 2 + zOffset);
+		transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y + verticalDrop, TrackLength / 2 + zOffset);
 	}
 
 
@@ -172,14 +181,14 @@ public class GameLogic : MonoBehaviour
 		if (gameIsOver)
 			return;
 
-		if (PlayerFinishedLevel())
+		if (PlayerStartsNextLevel())
 		{
 			NextLevel();
 			MoveCameraDownToNewLevel();
 		}
 		else
 		{
-			if (Floor != null && Player.transform.position.y < Floor.transform.position.y)
+			if (Player.transform.position.y < nextTrackY)
 			{
 				GameOver();
 				return;
@@ -189,7 +198,8 @@ public class GameLogic : MonoBehaviour
 
 			if (timeRemaining < 0)
 			{
-				GameOver();
+				Destroy(Floor);
+				Floor = null;
 				return;
 			}
 		}
@@ -272,9 +282,9 @@ public class GameLogic : MonoBehaviour
 		playerProperties.Track = Floor.GetComponent<Transform>();
 	}
 
-	private bool PlayerFinishedLevel()
+	private bool PlayerStartsNextLevel()
 	{
-		return Player.transform.position.z >= endOfTrackZ;
+		return Player.transform.position.z >= startOfNextTrackZ;
 	}
 
 	private float GetTimeRemaining()
@@ -300,11 +310,34 @@ public class GameLogic : MonoBehaviour
 		meshRenderer.material.color = new Color(color.r, color.g, color.b, opacity);
 	}
 
+	GameObject GetRandomChild(GameObject parent)
+	{
+		Transform[] childTransforms = parent.GetComponentsInChildren<Transform>();
+		const int maxTries = 40;
+		int numTries = 0;
+		while (numTries < maxTries)
+		{
+			int randomIndex = UnityEngine.Random.Range(0, childTransforms.Length);
+			Transform maybeObstacle = childTransforms[randomIndex];
+			if (ObstacleLogic.IsObstacle(maybeObstacle.gameObject))
+				return maybeObstacle.gameObject;
+			numTries++;
+		}
+
+		foreach (Transform transform in childTransforms)
+			if (ObstacleLogic.IsObstacle(transform.gameObject))
+				return transform.gameObject;
+
+		return null;
+
+	}
 	private void DropBlock(float xOffset, int yOffset, int zOffset)
 	{
 		Vector3 playerPosition = Player.transform.position;
 		Vector3 position = new Vector3(playerPosition.x + xOffset, playerPosition.y + 2 + yOffset, playerPosition.z + zOffset + DistanceAheadToDrop);
-		GameObject obstacle = Instantiate(Obstacle, position, Quaternion.identity);
+
+		GameObject prototype = GetRandomChild(Obstacles);
+		GameObject obstacle = Instantiate(prototype, position, Quaternion.identity);
 
 		ObstacleLogic obstacleLogic = obstacle.GetComponent<ObstacleLogic>();
 		obstacleLogic.live = true;
@@ -320,11 +353,14 @@ public class GameLogic : MonoBehaviour
 		numBlocksDestroyed++;
 		CheckForPowerUp(block);
 		//BlowUpBlockIntoSmallerPieces(block, BlackHole);
-		BlowUpBlockIntoIndividualParts(block, BlackHole);
+		RandomBlowUp(block, BlackHole);
 	}
 
 	public static void BlowUpBlockIntoIndividualParts(GameObject gameObject, Transform gravityCenter)
 	{
+		if (!ObstacleLogic.IsObstacle(gameObject))
+			return;
+
 		ObstacleLogic originalObstacleLogic = gameObject.GetComponent<ObstacleLogic>();
 		if (originalObstacleLogic == null)
 		{
@@ -338,27 +374,16 @@ public class GameLogic : MonoBehaviour
 
 		foreach (Transform child in gameObject.GetComponentsInChildren<Transform>())
 		{
-			if (child.gameObject.tag == gameObject.tag)
-			{
-				Debug.Log("Skipping the parent game object");
+			bool isParent = child.gameObject.tag == gameObject.tag;
+			if (isParent)
 				continue;
-			}
 
-			Debug.Log($"Separating: {child.gameObject.tag}");
+			//Debug.Log($"Separating: {child.gameObject.name}");
 			GameObject part = CreateParticle(child.gameObject, child.gameObject.transform.localScale, positionVector, gravityCenter);
 			part.transform.parent = null;
-			Debug.Log("Particle created!");
 			part.AddComponent<Rigidbody>();
 			part.AddComponent<BoxCollider>();
 			Rigidbody rigidbody = part.GetComponent<Rigidbody>();
-			if (rigidbody != null)
-			{
-				Debug.Log("Adding rigid body worked!");
-			}
-			else
-			{
-				Debug.Log("Adding rigid body failed!");
-			}
 			ObstacleLogic obstacleLogic = part.AddComponent<ObstacleLogic>();
 			obstacleLogic.BlackHole = originalObstacleLogic.BlackHole;
 			obstacleLogic.LifeSpanSeconds = originalObstacleLogic.LifeSpanSeconds;
@@ -415,5 +440,13 @@ public class GameLogic : MonoBehaviour
 			rigidbody.useGravity = true;
 			numBlocksDestroyed = 0;
 		}
+	}
+
+	public static void RandomBlowUp(GameObject gameObject, Transform blackHole)
+	{
+		if (UnityEngine.Random.Range(0, 100) < 50)
+			BlowUpBlockIntoIndividualParts(gameObject, blackHole);
+		else
+			BlowUpBlockIntoSmallerClones(gameObject, blackHole);
 	}
 }

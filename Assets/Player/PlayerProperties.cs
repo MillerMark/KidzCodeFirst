@@ -162,12 +162,11 @@ public class PlayerProperties : MonoBehaviour
 	{
 		if (!scaledUp)
 			return;
-		if (!collision.gameObject.name.Contains("Cheese Burger"))
-		{
-			//Debug.Log("Only blowing up blocks!!!");
-			return;
-		}
-		//GameLogic.BlowUpBlockIntoSmallerClones(collision.gameObject, BlackHole);
-		GameLogic.BlowUpBlockIntoIndividualParts(collision.gameObject, BlackHole);
+		if (ObstacleLogic.IsObstacle(collision.gameObject))
+			GameLogic.RandomBlowUp(collision.gameObject, BlackHole);
+
+		//if (collision.gameObject.tag == "Track")
+		//	GameLogic.PlayerHitTrack();
+
 	}
 }

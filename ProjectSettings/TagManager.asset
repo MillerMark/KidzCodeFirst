@@ -8,6 +8,7 @@ TagManager:
   - Cheese
   - Patty
   - Bottom Bun
+  - Obstacle
   layers:
   - Default
   - TransparentFX
