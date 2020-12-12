@@ -17,7 +17,7 @@ public class SkeletonModel : MonoBehaviour
 	}
 	void OnTriggerEnter(Collider other)
 	{
-		if (GameLogic.IsPlayer(other.gameObject))
+		if (Tags.IsPlayer(other.gameObject))
 			Debug.Log("Player just hit skeleton!");
 	}
 

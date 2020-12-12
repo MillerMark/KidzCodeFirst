@@ -56,13 +56,17 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Power-Up\SuperSize.cs" />
     <Compile Include="Assets\Missiles\MissileBehavior.cs" />
     <Compile Include="Assets\Power-Up\PowerUpBehavior.cs" />
     <Compile Include="Assets\Obstacles\FloatingBehavior.cs" />
     <Compile Include="Assets\Obstacles\ObstacleLogic.cs" />
+    <Compile Include="Assets\The Game\Tags.cs" />
     <Compile Include="Assets\Models\SkeletonModel.cs" />
     <Compile Include="Assets\The Game\DeleteBehindCamera.cs" />
     <Compile Include="Assets\The Game\GameLogic.cs" />
+    <Compile Include="Assets\Power-Up\RampScaleUp.cs" />
+    <Compile Include="Assets\Power-Up\RampUp.cs" />
     <Compile Include="Assets\The Game\SmoothMover.cs" />
     <Compile Include="Assets\Player\PlayerProperties.cs" />
     <Compile Include="Assets\The Game\CameraFollow.cs" />

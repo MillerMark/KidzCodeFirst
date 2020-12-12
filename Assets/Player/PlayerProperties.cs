@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -39,6 +40,7 @@ public class PlayerProperties : MonoBehaviour
 	public float PowerUpDuration = 3;
 	float powerUpEndTime;
 	float lastJumpTimeSec = -2;
+	public int NumRampPowerUps = 5;
 
 	// For screen rendering updates. About 30/s
 	// Check for input here.
@@ -46,7 +48,9 @@ public class PlayerProperties : MonoBehaviour
 	{
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			if (IsNearGround() && Time.time - lastJumpTimeSec > 0.2)
+			bool moreThanOneFifthSecPassedSinceLastJump = Time.time - lastJumpTimeSec > 0.2;
+			
+			if (objectIsBelowUs && moreThanOneFifthSecPassedSinceLastJump)
 			{
 				lastJumpTimeSec = Time.time;
 				canJump = true;
@@ -143,6 +147,16 @@ public class PlayerProperties : MonoBehaviour
 
 	public void PowerUp()
 	{
+		ScaleUp();
+	}
+
+	public void AddRamp()
+	{
+		NumRampPowerUps++;
+	}
+
+	public void ScaleUp()
+	{
 		if (scaledUp)
 			return;
 		scaledUp = true;
@@ -158,15 +172,21 @@ public class PlayerProperties : MonoBehaviour
 		transform.position = new Vector3(transform.position.x, savedY + newScale / 2, transform.position.z);
 	}
 
+	bool objectIsBelowUs;
 	void OnCollisionEnter(Collision collision)
 	{
-		if (!scaledUp)
-			return;
-		if (ObstacleLogic.IsObstacle(collision.gameObject))
-			GameLogic.RandomBlowUp(collision.gameObject, BlackHole);
+		if (scaledUp)
+			if (Tags.IsObstacle(collision.gameObject))
+				GameLogic.RandomBlowUp(collision.gameObject, BlackHole);
 
-		//if (collision.gameObject.tag == "Track")
-		//	GameLogic.PlayerHitTrack();
-
+		if (Tags.IsRamp(collision.gameObject) || Tags.IsTrack(collision.gameObject))
+			objectIsBelowUs = collision.gameObject.transform.position.y < transform.position.y;
 	}
+
+	void OnCollisionExit(Collision collision)
+	{
+		if (Tags.IsRamp(collision.gameObject) || Tags.IsTrack(collision.gameObject))
+			objectIsBelowUs = IsNearGround();
+	}
+
 }

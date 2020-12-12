@@ -5,8 +5,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GameLogic : MonoBehaviour
+public class GameLogic: MonoBehaviour
 {
+	int numRampPowerUps;
 	private const float distanceToDropBetweenLevels = -3f;
 	private const float distanceBetweenTracks = 5f;
 	SmoothMover trackOpacity;
@@ -31,12 +32,14 @@ public class GameLogic : MonoBehaviour
 	public float DistanceAheadToDrop = 20;
 	public float SecondsPerLap = 12;
 	public GameObject Obstacles;
+	public GameObject PowerUps;
+	public GameObject Ramp;
 	public GameObject Camera;
 	public Text LevelText;
+	public Text PowerUpText;
 	public Text CountdownText;
 	public Transform BlackHole;
 	public Transform Skeleton;
-	public GameObject PowerUp;
 	public int NumBlocksToPowerUp = 4;
 	float endOfTrackZ;
 	float endOfNextTrackZ;
@@ -48,9 +51,32 @@ public class GameLogic : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
+		ShowNumPowerUps();
 		SetupInitialTrack();
 		CreateNextTrack(distanceToDropBetweenLevels, endOfTrackZ + distanceBetweenTracks);
 		StartNewLevel();
+	}
+
+	
+	public int NumRampPowerUps
+	{
+		get
+		{
+			PlayerProperties playerScript = Player.GetComponent<PlayerProperties>();
+			return playerScript.NumRampPowerUps;
+		}
+		set
+		{
+			PlayerProperties playerScript = Player.GetComponent<PlayerProperties>();
+			playerScript.NumRampPowerUps = value;
+			Debug.Log($"playerScript.NumRampPowerUps: {playerScript.NumRampPowerUps}");
+			ShowNumPowerUps();
+		}
+	}
+
+	private void ShowNumPowerUps()
+	{
+		PowerUpText.text = new string('+', NumRampPowerUps);
 	}
 
 	private void SetupInitialTrack()
@@ -96,13 +122,6 @@ public class GameLogic : MonoBehaviour
 		nextTrackY = nextFloor.transform.position.y;
 	}
 
-	public static bool IsPlayer(GameObject someObject)
-	{
-		return someObject.tag == "Player";
-	}
-
-
-
 	private void PlaceSkeletonAtEndOfTrack()
 	{
 		Skeleton.position = new Vector3(0, Floor.transform.position.y + 0.5f, Floor.transform.position.z + Floor.transform.localScale.z / 2);
@@ -144,6 +163,7 @@ public class GameLogic : MonoBehaviour
 		//$"" Means that you can mix {data} with text
 		LevelText.text = $"Level {levelCount}";
 	}
+
 	void ShowTrackCountdown()
 	{
 		float timeRemaining = GetTimeRemaining();
@@ -292,13 +312,89 @@ public class GameLogic : MonoBehaviour
 		return endTime - Time.time;
 	}
 
+	int lastNumPowerUps;
 	void Update()
 	{
 		if (gameIsOver)
 			return;
+
+		PlayerProperties playerScript = Player.GetComponent<PlayerProperties>();
+		bool powerUpCountHasChanged = playerScript.NumRampPowerUps != lastNumPowerUps;
+		if (powerUpCountHasChanged)
+		{
+			SavePowerUpCount(playerScript);
+			ShowNumPowerUps();
+		}
+
 		ShowTrackCountdown();
 		if (trackOpacity != null)
 			SetTrackOpacity(trackOpacity.Value);
+		if (Input.GetKeyDown(KeyCode.Return))
+		{
+			LaunchRamp();
+		}
+	}
+
+	private void SavePowerUpCount(PlayerProperties playerScript)
+	{
+		lastNumPowerUps = playerScript.NumRampPowerUps;
+	}
+
+	GameObject lastRampCreated;
+
+	public enum RampDoubleResult
+	{
+		Success,
+		Failed
+	}
+
+	RampDoubleResult DoubleRampSize(GameObject gameObject)
+	{
+		RampScaleUp rampScaleUp = gameObject.GetComponent<RampScaleUp>();
+		if (rampScaleUp.weHaveAlreadyDoubledTheSize)
+			return RampDoubleResult.Failed;
+		rampScaleUp.DoubleRampSize();
+		NumRampPowerUps--;
+		return RampDoubleResult.Success;
+	}
+
+	private void LaunchRamp()
+	{
+		if (NumRampPowerUps <= 0)
+			return;
+
+		if (lastRampCreated != null)
+		{
+			bool rampIsInFrontOfPlayer = lastRampCreated.transform.localPosition.z > Player.transform.localPosition.z;
+			if (rampIsInFrontOfPlayer)
+			{
+				if (DoubleRampSize(lastRampCreated) == RampDoubleResult.Success)
+					return;
+				Destroy(lastRampCreated);
+				lastRampCreated = null;
+			}
+		}
+
+		NumRampPowerUps--;
+		Vector3 rampStartPosition = new Vector3(Player.transform.position.x, Player.transform.position.y, Player.transform.position.z + 0.5f);
+		GameObject ramp = Instantiate(Ramp, rampStartPosition, Ramp.transform.rotation);
+		lastRampCreated = ramp;
+		Rigidbody rigidbody = ramp.GetComponent<Rigidbody>();
+		Vector3 playerVelocity = Player.GetComponent<Rigidbody>().velocity;
+		Vector3 zOnly = new Vector3(0, 0, playerVelocity.z);
+
+		if (zOnly.z < 10)
+		{
+			rigidbody.AddForce(transform.forward * 10000 + zOnly * 800);
+		}
+		else
+		{
+			rigidbody.AddForce(transform.forward * 6000 + zOnly * 800);
+		}
+		rigidbody.AddForce(transform.up * 2500);
+		RampScaleUp rampScaleUp = ramp.GetComponent<RampScaleUp>();
+		rampScaleUp.ScaleUpNow();
+		ramp.transform.localScale = Vector3.zero;
 	}
 
 	private void SetTrackOpacity(float opacity)
@@ -310,7 +406,12 @@ public class GameLogic : MonoBehaviour
 		meshRenderer.material.color = new Color(color.r, color.g, color.b, opacity);
 	}
 
-	GameObject GetRandomChild(GameObject parent)
+	bool TagMatches(GameObject gameObject, string tag)
+	{
+		return gameObject.tag == tag;
+	}
+
+	GameObject GetRandomChild(GameObject parent, string tag = null)
 	{
 		Transform[] childTransforms = parent.GetComponentsInChildren<Transform>();
 		const int maxTries = 40;
@@ -319,13 +420,13 @@ public class GameLogic : MonoBehaviour
 		{
 			int randomIndex = UnityEngine.Random.Range(0, childTransforms.Length);
 			Transform maybeObstacle = childTransforms[randomIndex];
-			if (ObstacleLogic.IsObstacle(maybeObstacle.gameObject))
+			if (tag == null || TagMatches(maybeObstacle.gameObject, tag))
 				return maybeObstacle.gameObject;
 			numTries++;
 		}
 
 		foreach (Transform transform in childTransforms)
-			if (ObstacleLogic.IsObstacle(transform.gameObject))
+			if (tag == null || TagMatches(transform.gameObject, tag))
 				return transform.gameObject;
 
 		return null;
@@ -336,7 +437,7 @@ public class GameLogic : MonoBehaviour
 		Vector3 playerPosition = Player.transform.position;
 		Vector3 position = new Vector3(playerPosition.x + xOffset, playerPosition.y + 2 + yOffset, playerPosition.z + zOffset + DistanceAheadToDrop);
 
-		GameObject prototype = GetRandomChild(Obstacles);
+		GameObject prototype = GetRandomChild(Obstacles, Tags.STR_Obstacle);
 		GameObject obstacle = Instantiate(prototype, position, Quaternion.identity);
 
 		ObstacleLogic obstacleLogic = obstacle.GetComponent<ObstacleLogic>();
@@ -358,7 +459,7 @@ public class GameLogic : MonoBehaviour
 
 	public static void BlowUpBlockIntoIndividualParts(GameObject gameObject, Transform gravityCenter)
 	{
-		if (!ObstacleLogic.IsObstacle(gameObject))
+		if (!Tags.IsObstacle(gameObject))
 			return;
 
 		ObstacleLogic originalObstacleLogic = gameObject.GetComponent<ObstacleLogic>();
@@ -431,15 +532,19 @@ public class GameLogic : MonoBehaviour
 	private void CheckForPowerUp(GameObject block)
 	{
 		if (numBlocksDestroyed >= NumBlocksToPowerUp)
-		{
-			const float dropAheadPosition = 19f;
-			const float dropAheadHeight = 10f;
-			Vector3 powerUpPosition = new Vector3(block.transform.position.x, block.transform.position.y + dropAheadHeight, block.transform.position.z + dropAheadPosition);
-			GameObject powerUp = Instantiate(PowerUp, powerUpPosition, Quaternion.identity);
-			Rigidbody rigidbody = powerUp.GetComponent<Rigidbody>();
-			rigidbody.useGravity = true;
-			numBlocksDestroyed = 0;
-		}
+			CreatePowerUp(block);
+	}
+
+	private void CreatePowerUp(GameObject block)
+	{
+		const float dropAheadPosition = 30f;
+		const float dropAheadHeight = 10f;
+		Vector3 powerUpPosition = new Vector3(block.transform.position.x, block.transform.position.y + dropAheadHeight, block.transform.position.z + dropAheadPosition);
+		GameObject randomPowerUp = GetRandomChild(PowerUps, PowerUpBehavior.STR_PowerUp);
+		GameObject powerUp = Instantiate(randomPowerUp, powerUpPosition, randomPowerUp.transform.rotation);
+		Rigidbody rigidbody = powerUp.GetComponent<Rigidbody>();
+		rigidbody.useGravity = true;
+		numBlocksDestroyed = 0;
 	}
 
 	public static void RandomBlowUp(GameObject gameObject, Transform blackHole)

@@ -28,8 +28,4 @@ public class ObstacleLogic : MonoBehaviour
 			isFloating = true;
 		}
 	}
-	public static bool IsObstacle(GameObject gameObject)
-	{
-		return gameObject.tag == "Obstacle";
-	}
 }

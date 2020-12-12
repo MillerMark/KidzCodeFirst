@@ -4,11 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Top Bun
-  - Cheese
-  - Patty
-  - Bottom Bun
   - Obstacle
+  - Power Up
+  - Track
+  - Ramp
   layers:
   - Default
   - TransparentFX

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 public class MissileBehavior : MonoBehaviour
 {
 	public float MissileLifeSpanSeconds = 3f;
@@ -32,7 +31,7 @@ public class MissileBehavior : MonoBehaviour
 
 	void OnCollisionEnter(Collision collision)
 	{
-		if (!ObstacleLogic.IsObstacle(collision.gameObject))
+		if (!Tags.IsObstacle(collision.gameObject))
 			return;
 
 		GameLogic gameLogic = GameLogic.GetComponent<GameLogic>();
